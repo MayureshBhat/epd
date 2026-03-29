@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignBridge — Sign Language to English</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:   #f5f0e8;
+  --ink:     #1a1714;
+  --ink2:    #4a4540;
+  --ink3:    #9a9390;
+  --red:     #c0392b;
+  --red-lt:  #f9eeec;
+  --line:    #ddd8ce;
+  --white:   #fdfbf7;
+  --serif:   'DM Serif Display', Georgia, serif;
+  --sans:    'DM Sans', system-ui, sans-serif;
+  --mono:    'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 56px; height: 60px;
+}
+.nav-logo {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  color: var(--ink);
+  letter-spacing: -.01em;
+}
+.nav-logo em { font-style: italic; color: var(--red); }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a {
+  font-size: .8rem; font-weight: 400; letter-spacing: .04em;
+  color: var(--ink2); text-decoration: none;
+  text-transform: uppercase;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--red); }
+.nav-cta {
+  background: var(--ink); color: var(--paper) !important;
+  padding: 7px 18px; font-size: .75rem !important;
+}
+.nav-cta:hover { background: var(--red); color: var(--white) !important; }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+  margin-top: 60px;
+}
+.hero-left {
+  padding: 80px 56px 80px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-right: 1px solid var(--line);
+}
+.hero-eyebrow {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--red);
+  margin-bottom: 28px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-eyebrow::before {
+  content: ''; display: block; width: 28px; height: 1px; background: var(--red);
+}
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(3rem, 5vw, 5rem);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+h1 em { font-style: italic; color: var(--red); }
+.hero-desc {
+  font-size: 1.05rem; color: var(--ink2);
+  max-width: 440px; line-height: 1.8;
+  margin-bottom: 44px;
+}
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: .8rem; font-weight: 500;
+  letter-spacing: .03em; text-decoration: none;
+  padding: 13px 28px; cursor: pointer; border: none;
+  transition: all .2s;
+}
+.btn-dark { background: var(--ink); color: var(--paper); }
+.btn-dark:hover { background: var(--red); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn-outline:hover { border-color: var(--ink); }
+
+/* hero right — stats grid */
+.hero-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.stat-cell {
+  padding: 48px 40px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.stat-cell:nth-child(2) { border-right: none; }
+.stat-cell:nth-child(3) { border-bottom: none; }
+.stat-cell:nth-child(4) { border-right: none; border-bottom: none; }
+.stat-num {
+  font-family: var(--serif); font-size: 3.5rem;
+  font-weight: 400; line-height: 1; color: var(--ink);
+  margin-bottom: 8px;
+}
+.stat-num span { color: var(--red); }
+.stat-label {
+  font-family: var(--mono); font-size: .68rem;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink3);
+}
+
+/* ── SECTIONS ── */
+section { border-bottom: 1px solid var(--line); }
+.section-inner { max-width: 1200px; margin: 0 auto; padding: 96px 56px; }
+.section-header {
+  display: grid; grid-template-columns: 200px 1fr;
+  gap: 48px; margin-bottom: 72px; align-items: start;
+}
+.section-num {
+  font-family: var(--mono); font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink3); padding-top: 10px;
+}
+h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  letter-spacing: -.02em; line-height: 1.1;
+  margin-bottom: 16px;
+}
+.section-desc { color: var(--ink2); font-size: .95rem; line-height: 1.8; max-width: 520px; }
+
+/* ── PIPELINE ── */
+#how { background: var(--white); }
+.pipeline {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  border: 1px solid var(--line);
+}
+.pipe-step {
+  padding: 36px 28px;
+  border-right: 1px solid var(--line);
+  transition: background .2s;
+}
+.pipe-step:last-child { border-right: none; }
+.pipe-step:hover { background: var(--red-lt); }
+.pipe-n {
+  font-family: var(--mono); font-size: .65rem; color: var(--red);
+  letter-spacing: .1em; margin-bottom: 20px;
+}
+.pipe-icon { font-size: 1.8rem; margin-bottom: 16px; display: block; }
+.pipe-title {
+  font-family: var(--serif); font-size: 1rem;
+  font-weight: 400; margin-bottom: 10px;
+}
+.pipe-desc { font-size: .8rem; color: var(--ink2); line-height: 1.65; }
+
+/* ── DEMO ── */
+#demo { background: var(--paper); }
+.demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
+
+.cam-panel { border-right: 1px solid var(--line); }
+.cam-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: .68rem; color: var(--ink3);
+}
+.cam-dots { display: flex; gap: 6px; }
+.cdot { width: 10px; height: 10px; border-radius: 50%; }
+.status-row { display: flex; align-items: center; gap: 7px; }
+.sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink3); flex-shrink: 0; }
+.sdot.live { background: #27ae60; animation: blink .9s step-end infinite; }
+.sdot.err  { background: var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+#video-container {
+  position: relative; background: var(--ink); aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+#webcam { width: 100%; height: 100%; object-fit: cover; display: none; transform: scaleX(-1); }
+#output-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+#cam-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  padding: 28px; text-align: center; background: rgba(26,23,20,.95);
+}
+.ov-icon { font-size: 2.2rem; }
+.ov-title { font-family: var(--serif); font-size: 1.1rem; color: var(--paper); }
+.ov-msg { font-size: .78rem; color: var(--ink3); line-height: 1.7; max-width: 280px; }
+.ov-steps { list-style: none; text-align: left; margin-top: 4px; }
+.ov-steps li { font-family: var(--mono); font-size: .62rem; color: var(--ink3); padding: 3px 0; display: flex; gap: 8px; }
+.ov-steps li::before { content: '—'; color: var(--red); flex-shrink: 0; }
+.ov-btn {
+  font-family: var(--sans); font-size: .72rem; font-weight: 500;
+  padding: 9px 20px; border: none; cursor: pointer;
+  background: var(--paper); color: var(--ink);
+  transition: background .2s; margin-top: 4px;
+}
+.ov-btn:hover { background: var(--red); color: var(--white); }
+
+.cam-start {
+  width: 100%; padding: 15px; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: .8rem; font-weight: 500;
+  letter-spacing: .04em; text-transform: uppercase;
+  background: var(--ink); color: var(--paper);
+  transition: background .2s;
+}
+.cam-start:hover { background: var(--red); }
+.cam-start.stop { background: var(--red); }
+.cam-start.stop:hover { background: #a93226; }
+.cam-start:disabled { opacity: .45; cursor: not-allowed; }
+
+/* output side */
+.out-panel { display: flex; flex-direction: column; }
+.out-block { padding: 24px 28px; border-bottom: 1px solid var(--line); flex: 1; }
+.out-block:last-of-type { border-bottom: none; }
+.out-lbl {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink3); margin-bottom: 14px;
+}
+.big-letter {
+  font-family: var(--serif); font-size: 5rem; line-height: 1;
+  color: var(--ink); transition: transform .15s;
+  min-height: 90px; display: flex; align-items: center;
+}
+.big-letter.flash { color: var(--red); }
+
+/* hold bar */
+.hold-track { height: 3px; background: var(--line); margin-top: 14px; }
+.hold-fill { height: 100%; background: var(--red); width: 0%; transition: width .07s linear; }
+.hold-hint { font-family: var(--mono); font-size: .6rem; color: var(--ink3); margin-top: 5px; }
+
+/* confidence */
+.conf-track { height: 2px; background: var(--line); margin-top: 10px; }
+.conf-fill { height: 100%; background: var(--ink); width: 0%; transition: width .2s; }
+.conf-lbl { font-family: var(--mono); font-size: .6rem; color: var(--ink3); margin-top: 5px; }
+
+/* finger pips */
+.finger-row { display: flex; gap: 5px; margin-top: 10px; }
+.fpip {
+  height: 6px; flex: 1; background: var(--line);
+  transition: background .12s; position: relative;
+}
+.fpip.on { background: var(--red); }
+.fpip::after {
+  content: attr(data-n); position: absolute; bottom: -14px; left: 50%;
+  transform: translateX(-50%); font-size: .45rem; color: var(--ink3);
+  font-family: var(--mono); white-space: nowrap;
+}
+
+.word-text {
+  font-family: var(--serif); font-size: 1.6rem; color: var(--ink);
+  letter-spacing: .04em; min-height: 44px; line-height: 1.3;
+}
+.cursor {
+  display: inline-block; width: 2px; height: 1.1em;
+  background: var(--red); animation: blink 1s step-end infinite;
+  vertical-align: middle; margin-left: 2px;
+}
+.sentence-text {
+  font-size: .92rem; color: var(--ink2); line-height: 1.8; min-height: 56px;
+  font-style: italic;
+}
+
+.demo-controls {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 14px 28px; border-top: 1px solid var(--line);
+  background: var(--white);
+}
+.ctrl {
+  font-family: var(--mono); font-size: .65rem; letter-spacing: .04em;
+  padding: 7px 12px; background: transparent;
+  border: 1px solid var(--line); color: var(--ink2);
+  cursor: pointer; transition: all .2s; text-transform: uppercase;
+}
+.ctrl:hover { border-color: var(--ink); color: var(--ink); }
+.ctrl.on { border-color: var(--red); color: var(--red); background: var(--red-lt); }
+.kb-hints {
+  padding: 10px 28px; border-top: 1px solid var(--line);
+  display: flex; gap: 16px; flex-wrap: wrap;
+  background: var(--white);
+}
+.kh { font-family: var(--mono); font-size: .58rem; color: var(--ink3); display: flex; gap: 5px; align-items: center; }
+kbd {
+  background: var(--line); color: var(--ink); padding: 2px 5px;
+  font-size: .55rem; font-family: var(--mono);
+}
+
+/* ── FEATURES ── */
+#features { background: var(--white); }
+.feat-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.feat-card {
+  padding: 40px 36px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  transition: background .2s;
+}
+.feat-card:hover { background: var(--red-lt); }
+.feat-num {
+  font-family: var(--mono); font-size: .62rem; color: var(--red);
+  letter-spacing: .1em; margin-bottom: 20px;
+}
+.feat-title {
+  font-family: var(--serif); font-size: 1.15rem;
+  font-weight: 400; margin-bottom: 12px;
+}
+.feat-desc { font-size: .85rem; color: var(--ink2); line-height: 1.75; }
+
+/* ── TECH ── */
+#tech { background: var(--paper); }
+.tech-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--line);
+}
+.tech-card {
+  padding: 36px 28px; border-right: 1px solid var(--line);
+  transition: background .2s;
+}
+.tech-card:last-child { border-right: none; }
+.tech-card:hover { background: var(--white); }
+.tech-name {
+  font-family: var(--mono); font-size: .8rem; font-weight: 500;
+  color: var(--ink); margin-bottom: 10px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+}
+.tech-role { font-size: .8rem; color: var(--ink2); line-height: 1.7; }
+
+/* ── GUIDE ── */
+#guide { background: var(--white); }
+.guide-tabs { display: flex; border: 1px solid var(--line); width: fit-content; margin-bottom: 48px; }
+.gtab {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .08em;
+  text-transform: uppercase; padding: 11px 24px;
+  background: transparent; border: none; border-right: 1px solid var(--line);
+  cursor: pointer; color: var(--ink3); transition: all .2s;
+}
+.gtab:last-child { border-right: none; }
+.gtab.on { background: var(--ink); color: var(--paper); }
+.gesture-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0; border: 1px solid var(--line); }
+.gc {
+  padding: 20px 16px; border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line); text-align: center;
+  transition: background .2s;
+}
+.gc:hover { background: var(--red-lt); }
+.gs { font-family: var(--serif); font-size: 2rem; font-weight: 400; color: var(--ink); margin-bottom: 6px; }
+.gd { font-family: var(--mono); font-size: .58rem; color: var(--ink3); line-height: 1.5; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink); color: var(--paper);
+  padding: 56px; display: flex; align-items: center; justify-content: space-between;
+}
+.ft-logo { font-family: var(--serif); font-size: 1.4rem; font-weight: 400; }
+.ft-logo em { font-style: italic; color: var(--red); }
+.ft-sub { font-family: var(--mono); font-size: .65rem; color: var(--ink3); letter-spacing: .06em; margin-top: 6px; }
+.ft-right { text-align: right; }
+.ft-right p { font-family: var(--mono); font-size: .65rem; color: var(--ink3); line-height: 1.8; }
+
+/* ── SCROLL REVEAL ── */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 1024px) {
+  #hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .section-header { grid-template-columns: 1fr; gap: 12px; }
+  .pipeline { grid-template-columns: repeat(3, 1fr); }
+  .tech-grid { grid-template-columns: repeat(2, 1fr); }
+  .feat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  .hero-left { padding: 56px 24px; }
+  .section-inner { padding: 64px 24px; }
+  .demo-layout { grid-template-columns: 1fr; }
+  .cam-panel { border-right: none; border-bottom: 1px solid var(--line); }
+  .pipeline { grid-template-columns: 1fr 1fr; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr 1fr; }
+  footer { flex-direction: column; gap: 24px; text-align: center; }
+  .ft-right { text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Sign<em>Bridge</em></div>
+  <div class="nav-links">
+    <a href="#how">Process</a>
+    <a href="#demo">Demo</a>
+    <a href="#features">Features</a>
+    <a href="#guide">Guide</a>
+    <a href="#demo" class="nav-cta btn">Try It Live</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Computer Vision Project</div>
+    <h1>Sign language,<br>read in <em>real time.</em></h1>
+    <p class="hero-desc">
+      A browser-based system that translates ASL and ISL hand gestures into English text using MediaPipe's landmark detection — no install, no server, just open and sign.
+    </p>
+    <div class="hero-btns">
+      <a href="#demo" class="btn btn-dark">Open Live Demo</a>
+      <a href="#how" class="btn btn-outline">How it works</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="stat-cell reveal">
+      <div class="stat-num">21<span>.</span></div>
+      <div class="stat-label">Landmarks tracked per hand</div>
+    </div>
+    <div class="stat-cell reveal">
+      <div class="stat-num">26<span>+</span></div>
+      <div class="stat-label">ASL signs recognised</div>
+    </div>
+    <div class="stat-cell reveal">
+      <div class="stat-num">30<span>+</span></div>
+      <div class="stat-label">ISL Devanagari signs</div>
+    </div>
+    <div class="stat-cell reveal">
+      <div class="stat-num">&lt;50<span>ms</span></div>
+      <div class="stat-label">Inference latency</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-num">01 — Process</div>
+      <div>
+        <h2>Five stages,<br>under 50 milliseconds.</h2>
+        <p class="section-desc">Each frame from your camera travels through a pipeline that ends in a confirmed letter on screen.</p>
+      </div>
+    </div>
+    <div class="pipeline reveal">
+      <div class="pipe-step">
+        <div class="pipe-n">01</div>
+        <div class="pipe-icon">📷</div>
+        <div class="pipe-title">Webcam capture</div>
+        <div class="pipe-desc">720p frames grabbed live via the browser's getUserMedia API.</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-n">02</div>
+        <div class="pipe-icon">✋</div>
+        <div class="pipe-title">Landmark detection</div>
+        <div class="pipe-desc">MediaPipe WASM extracts 21 3D points per hand, per frame.</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-n">03</div>
+        <div class="pipe-icon">📐</div>
+        <div class="pipe-title">Feature engineering</div>
+        <div class="pipe-desc">Finger extension states and joint angles computed in JavaScript.</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-n">04</div>
+        <div class="pipe-icon">🧠</div>
+        <div class="pipe-title">Classification</div>
+        <div class="pipe-desc">Pattern lookup maps the 5-finger binary string to an ASL or ISL character.</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-n">05</div>
+        <div class="pipe-icon">💬</div>
+        <div class="pipe-title">Text output</div>
+        <div class="pipe-desc">A 7-frame stabiliser confirms gestures before adding them to the sentence.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-num">02 — Demo</div>
+      <div>
+        <h2>Sign into the<br>camera. Watch it type.</h2>
+        <p class="section-desc">Hold any gesture steady — the red bar fills over 1.5 s and confirms the letter. Press Space to finish a word.</p>
+      </div>
+    </div>
+
+    <div class="demo-layout reveal">
+      <!-- Camera -->
+      <div class="cam-panel">
+        <div class="cam-bar">
+          <div class="cam-dots">
+            <div class="cdot" style="background:#ff5f57"></div>
+            <div class="cdot" style="background:#febc2e"></div>
+            <div class="cdot" style="background:#28c840"></div>
+          </div>
+          <div class="status-row"><div class="sdot" id="sdot"></div><span id="stext">Ready</span></div>
+          <span id="fps-label" style="font-family:var(--mono);font-size:.65rem;color:var(--ink3)">— fps</span>
+        </div>
+        <div id="video-container">
+          <video id="webcam" autoplay playsinline muted></video>
+          <canvas id="output-canvas"></canvas>
+          <div id="cam-overlay">
+            <div class="ov-icon">📷</div>
+            <div class="ov-title">Camera access needed</div>
+            <div class="ov-msg">Click Start Camera below. Allow access when your browser asks.</div>
+            <ul class="ov-steps">
+              <li>Works on Chrome, Edge, Firefox</li>
+              <li>Must be on HTTPS (GitHub Pages / Netlify both work)</li>
+              <li>If blocked: click 🔒 in address bar → Camera → Allow</li>
+            </ul>
+          </div>
+        </div>
+        <button class="cam-start" id="cam-btn" onclick="toggleCamera()">Start Camera</button>
+      </div>
+
+      <!-- Output -->
+      <div class="out-panel">
+        <div class="out-block">
+          <div class="out-lbl">Detected sign</div>
+          <div class="big-letter" id="detected-letter">—</div>
+          <div class="hold-track"><div class="hold-fill" id="hold-bar"></div></div>
+          <div class="hold-hint">Hold steady — bar fills over 1.5 s then confirms</div>
+          <div class="conf-track"><div class="conf-fill" id="conf-bar"></div></div>
+          <div class="conf-lbl" id="conf-label">Confidence —</div>
+          <div style="margin-top:16px">
+            <div class="out-lbl" style="margin-bottom:8px">Finger states</div>
+            <div class="finger-row" id="finger-row">
+              <div class="fpip" data-n="Thumb"></div>
+              <div class="fpip" data-n="Index"></div>
+              <div class="fpip" data-n="Middle"></div>
+              <div class="fpip" data-n="Ring"></div>
+              <div class="fpip" data-n="Pinky"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="out-block">
+          <div class="out-lbl">Current word</div>
+          <div class="word-text"><span id="word-text"></span><span class="cursor"></span></div>
+        </div>
+
+        <div class="out-block" style="flex:2">
+          <div class="out-lbl">Sentence</div>
+          <div class="sentence-text" id="sentence-display">Your sentence will appear here...</div>
+        </div>
+
+        <div class="demo-controls">
+          <button class="ctrl on" id="mode-asl" onclick="setMode('ASL')">ASL</button>
+          <button class="ctrl" id="mode-isl" onclick="setMode('ISL')">ISL</button>
+          <button class="ctrl" onclick="addSpace()">Space</button>
+          <button class="ctrl" onclick="confirmWord()">Confirm word</button>
+          <button class="ctrl" onclick="doBack()">⌫ Delete</button>
+          <button class="ctrl" onclick="clearAll()">Clear all</button>
+        </div>
+        <div class="kb-hints">
+          <span class="kh"><kbd>SPACE</kbd> space</span>
+          <span class="kh"><kbd>ENTER</kbd> word</span>
+          <span class="kh"><kbd>BKSP</kbd> delete</span>
+          <span class="kh"><kbd>C</kbd> clear</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-num">03 — Capabilities</div>
+      <div><h2>What the system can do.</h2></div>
+    </div>
+    <div class="feat-grid reveal">
+      <div class="feat-card">
+        <div class="feat-num">F — 01</div>
+        <div class="feat-title">Indian Sign Language</div>
+        <div class="feat-desc">Full Devanagari character support — vowels (स्वर), consonants (व्यंजन), and digits with context-aware disambiguation for ambiguous handshapes.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-num">F — 02</div>
+        <div class="feat-title">American Sign Language</div>
+        <div class="feat-desc">All 26 English letters. Pattern logic and angle checks separate look-alike handshapes such as C and S, or O and a closed fist.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-num">F — 03</div>
+        <div class="feat-title">Runs entirely in the browser</div>
+        <div class="feat-desc">MediaPipe compiles to WASM and runs client-side. No server, no Python, no installation. Open the URL and sign.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-num">F — 04</div>
+        <div class="feat-title">Confidence scoring</div>
+        <div class="feat-desc">Every prediction is scored across landmark spread, hand steadiness, and pattern exclusivity — low-confidence frames are filtered out.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-num">F — 05</div>
+        <div class="feat-title">Word and sentence builder</div>
+        <div class="feat-desc">A hold-to-confirm mechanic prevents accidental inputs. Letters accumulate into words; words accumulate into sentences.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-num">F — 06</div>
+        <div class="feat-title">Finger state visualiser</div>
+        <div class="feat-desc">Live indicator bars show which fingers the model detects as extended — so you can see exactly what the classifier is reading.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section id="tech">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-num">04 — Stack</div>
+      <div><h2>Technology used.</h2></div>
+    </div>
+    <div class="tech-grid reveal">
+      <div class="tech-card">
+        <div class="tech-name">MediaPipe Hands</div>
+        <div class="tech-role">Google's 21-point 3D hand landmark model, compiled to WASM. Same model used in the Python notebook — identical accuracy.</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">OpenCV + Python</div>
+        <div class="tech-role">Full-accuracy local pipeline with curvature-angle classification, session saving, and text-to-speech output.</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">NumPy</div>
+        <div class="tech-role">Vector arithmetic for joint angles, finger curvature scoring, and hand steadiness in the Python backend.</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-name">Vanilla JS</div>
+        <div class="tech-role">No framework. Direct Canvas 2D drawing, deque-style frame buffer, pattern lookup table, keyboard shortcuts.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GESTURE GUIDE -->
+<section id="guide">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-num">05 — Reference</div>
+      <div>
+        <h2>Gesture guide.</h2>
+        <p class="section-desc">Use this as a cheat sheet while practising — each card shows the letter and the handshape it maps to.</p>
+      </div>
+    </div>
+    <div class="guide-tabs reveal">
+      <button class="gtab on" onclick="showTab('asl')">ASL — English</button>
+      <button class="gtab" onclick="showTab('isl')">ISL — Devanagari</button>
+    </div>
+    <div id="tab-asl" class="gesture-grid reveal">
+      <div class="gc"><div class="gs">A</div><div class="gd">Thumb only</div></div>
+      <div class="gc"><div class="gs">B</div><div class="gd">All fingers</div></div>
+      <div class="gc"><div class="gs">C</div><div class="gd">Curved hand</div></div>
+      <div class="gc"><div class="gs">D</div><div class="gd">Index up</div></div>
+      <div class="gc"><div class="gs">E</div><div class="gd">Thumb + middle</div></div>
+      <div class="gc"><div class="gs">F</div><div class="gd">Four fingers</div></div>
+      <div class="gc"><div class="gs">G</div><div class="gd">Thumb + index</div></div>
+      <div class="gc"><div class="gs">H</div><div class="gd">Index + ring</div></div>
+      <div class="gc"><div class="gs">I</div><div class="gd">Pinky only</div></div>
+      <div class="gc"><div class="gs">J</div><div class="gd">Thumb+mid+pinky</div></div>
+      <div class="gc"><div class="gs">K</div><div class="gd">Thumb+mid+ring</div></div>
+      <div class="gc"><div class="gs">L</div><div class="gd">Thumb + index L</div></div>
+      <div class="gc"><div class="gs">M</div><div class="gd">Middle only</div></div>
+      <div class="gc"><div class="gs">N</div><div class="gd">Middle + ring</div></div>
+      <div class="gc"><div class="gs">O</div><div class="gd">Thumb+index+ring</div></div>
+      <div class="gc"><div class="gs">P</div><div class="gd">Index + pinky</div></div>
+      <div class="gc"><div class="gs">Q</div><div class="gd">Thumb + ring</div></div>
+      <div class="gc"><div class="gs">R</div><div class="gd">Middle + ring</div></div>
+      <div class="gc"><div class="gs">S</div><div class="gd">Closed fist</div></div>
+      <div class="gc"><div class="gs">T</div><div class="gd">Thumb+idx+rng+pky</div></div>
+      <div class="gc"><div class="gs">U</div><div class="gd">Thumb+idx+mid+pky</div></div>
+      <div class="gc"><div class="gs">V</div><div class="gd">Index + middle</div></div>
+      <div class="gc"><div class="gs">W</div><div class="gd">Idx+mid+ring</div></div>
+      <div class="gc"><div class="gs">X</div><div class="gd">Middle + pinky</div></div>
+      <div class="gc"><div class="gs">Y</div><div class="gd">Thumb + pinky</div></div>
+      <div class="gc"><div class="gs">Z</div><div class="gd">Ring + pinky</div></div>
+    </div>
+    <div id="tab-isl" class="gesture-grid reveal" style="display:none">
+      <div class="gc"><div class="gs">अ</div><div class="gd">Closed fist</div></div>
+      <div class="gc"><div class="gs">आ</div><div class="gd">Open palm</div></div>
+      <div class="gc"><div class="gs">इ</div><div class="gd">Index up</div></div>
+      <div class="gc"><div class="gs">ई</div><div class="gd">Index + middle</div></div>
+      <div class="gc"><div class="gs">उ</div><div class="gd">Pinky up</div></div>
+      <div class="gc"><div class="gs">ऊ</div><div class="gd">Thumb + pinky</div></div>
+      <div class="gc"><div class="gs">ए</div><div class="gd">Thumb up</div></div>
+      <div class="gc"><div class="gs">ओ</div><div class="gd">Thumb + index</div></div>
+      <div class="gc"><div class="gs">क</div><div class="gd">Idx+mid+ring</div></div>
+      <div class="gc"><div class="gs">ख</div><div class="gd">Thumb+idx+mid</div></div>
+      <div class="gc"><div class="gs">ग</div><div class="gd">Four fingers</div></div>
+      <div class="gc"><div class="gs">घ</div><div class="gd">Thumb + 3 fingers</div></div>
+      <div class="gc"><div class="gs">च</div><div class="gd">Index + ring</div></div>
+      <div class="gc"><div class="gs">ज</div><div class="gd">Middle + ring</div></div>
+      <div class="gc"><div class="gs">त</div><div class="gd">Thumb+mid+ring</div></div>
+      <div class="gc"><div class="gs">न</div><div class="gd">Ring + pinky</div></div>
+      <div class="gc"><div class="gs">प</div><div class="gd">Thumb+idx+mid+pky</div></div>
+      <div class="gc"><div class="gs">म</div><div class="gd">Mid+ring+pinky</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="ft-logo">Sign<em>Bridge</em></div>
+    <div class="ft-sub">A computer vision project — ASL &amp; ISL recognition</div>
+  </div>
+  <div class="ft-right">
+    <p>Built with MediaPipe Hands · OpenCV · Python · Vanilla JS<br>Runs entirely in your browser — no server required</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════
+     DETECTION ENGINE (unchanged logic)
+     ═══════════════════════════════════ -->
+<script>
+const ASL={
+  '00000':'S','10000':'A','11111':'B','01111':'F',
+  '01000':'D','01100':'V','01110':'W','00001':'I',
+  '10001':'Y','11000':'G','11001':'L','00111':'N',
+  '00011':'Z','01010':'H','00100':'M','10100':'E',
+  '10010':'Q','01001':'P','10110':'K','00101':'X',
+  '11010':'O','11011':'T','10101':'J','00110':'R',
+  '11101':'U','11110':'C','10011':'K',
+};
+const ISL={
+  '00000':'अ','11111':'आ','01000':'इ','01100':'ई',
+  '00001':'उ','10001':'ऊ','10000':'ए','11000':'ओ',
+  '01110':'क','11100':'ख','01111':'ग','11110':'घ',
+  '01010':'च','00100':'छ','00110':'ज','10100':'झ',
+  '00010':'ट','10010':'ठ','01001':'ड','11010':'ढ',
+  '00101':'ण','10110':'त','01011':'थ','00011':'न',
+  '11101':'प','10101':'फ','01101':'ब','11011':'भ',
+  '00111':'म',
+};
+
+let mode='ASL', letterBuf=[], wordBuf=[];
+let holdLetter='', holdStart=0;
+const HOLD_MS=1500, COOLDOWN=1200; let lastAdded=0;
+const DQSZ=7; let dqL=[], dqC=[];
+let fpsTick=Date.now(), fpsN=0;
+let handsInst=null, camInst=null, running=false, mpReady=false;
+
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.crossOrigin='anonymous';s.onload=res;s.onerror=rej;document.head.appendChild(s);})}
+
+async function ensureMP(){
+  if(mpReady)return true;
+  setStatus('loading','Loading MediaPipe...');
+  try{
+    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js');
+    mpReady=true; return true;
+  }catch(e){
+    setStatus('err','MediaPipe failed to load');
+    showOv('⚠️','Failed to load','Check your internet connection and reload.',[]); return false;
+  }
+}
+
+async function toggleCamera(){
+  if(running){stopCam();return;}
+  const btn=document.getElementById('cam-btn');
+  btn.textContent='Loading...'; btn.disabled=true;
+  const ok=await ensureMP();
+  if(!ok){btn.textContent='Start Camera';btn.disabled=false;return;}
+  let stream;
+  try{
+    setStatus('loading','Requesting camera...');
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});
+  }catch(err){btn.textContent='Start Camera';btn.disabled=false;handleErr(err);return;}
+  const v=document.getElementById('webcam');
+  v.srcObject=stream;
+  await new Promise(r=>v.onloadedmetadata=r);
+  v.play();
+  initHands(v,stream);
+  v.style.display='block'; hideOv();
+  btn.textContent='Stop Camera'; btn.classList.add('stop'); btn.disabled=false;
+  setStatus('live','Live · MediaPipe active'); running=true;
+}
+
+function stopCam(){
+  running=false;
+  if(camInst){try{camInst.stop();}catch(e){}camInst=null;}
+  if(handsInst){try{handsInst.close();}catch(e){}handsInst=null;}
+  const v=document.getElementById('webcam');
+  if(v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+  v.style.display='none';
+  showOv('📷','Camera stopped','Click Start Camera to resume.',[]);
+  const btn=document.getElementById('cam-btn');
+  btn.textContent='Start Camera'; btn.classList.remove('stop');
+  setStatus('off','Camera off');
+  document.getElementById('fps-label').textContent='— fps';
+  resetDet();
+}
+
+function handleErr(err){
+  const n=err.name||'';
+  if(n==='NotAllowedError'||n==='PermissionDeniedError'){
+    showOv('🚫','Permission denied','How to fix it:',['Click 🔒 in your address bar','Set Camera to Allow','Reload the page and try again','On mobile: Settings → Browser → Camera → Allow']);
+    setStatus('err','Permission denied');
+  }else if(n==='NotFoundError'){
+    showOv('🔌','No camera found','No webcam detected.',['Check webcam is connected','Try refreshing']);
+    setStatus('err','No camera found');
+  }else if(n==='NotReadableError'){
+    showOv('⚠️','Camera in use','Another app is using the camera.',['Close Zoom, Teams, or other camera apps','Then try again']);
+    setStatus('err','Camera in use');
+  }else{
+    showOv('⚠️','Camera error',err.message||n,['Try refreshing','Make sure you are on HTTPS','Try Chrome or Edge']);
+    setStatus('err','Error');
+  }
+}
+
+function initHands(v,stream){
+  const canvas=document.getElementById('output-canvas');
+  const ctx=canvas.getContext('2d');
+  handsInst=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+  handsInst.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.75,minTrackingConfidence:.65});
+  handsInst.onResults(results=>{
+    if(!running)return;
+    canvas.width=v.videoWidth||640; canvas.height=v.videoHeight||480;
+    fpsN++; const now=Date.now();
+    if(now-fpsTick>=1000){document.getElementById('fps-label').textContent=fpsN+' fps';fpsN=0;fpsTick=now;}
+    ctx.save();
+    ctx.translate(canvas.width,0); ctx.scale(-1,1);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(results.multiHandLandmarks&&results.multiHandLandmarks[0]){
+      const lm=results.multiHandLandmarks[0];
+      drawConnectors(ctx,lm,HAND_CONNECTIONS,{color:'rgba(192,57,43,0.5)',lineWidth:2});
+      drawLandmarks(ctx,lm,{color:'#c0392b',lineWidth:1,radius:4});
+      ctx.restore();
+      const{fingers,conf}=extractFeatures(lm);
+      const letter=(mode==='ASL'?ASL:ISL)[fingers.join('')]||'';
+      if(dqL.length>=DQSZ){dqL.shift();dqC.shift();}
+      dqL.push(letter);dqC.push(conf);
+      const{stable,score}=getStable();
+      renderUI(stable,score,fingers,now);
+    }else{
+      ctx.restore(); holdLetter=''; holdStart=0;
+      renderUI('',0,[0,0,0,0,0],now);
+    }
+  });
+  camInst=new Camera(v,{onFrame:async()=>{if(handsInst&&running)await handsInst.send({image:v});},width:1280,height:720});
+  camInst.start();
+}
+
+function extractFeatures(lm){
+  const thumbUp=Math.abs(lm[4].x-lm[2].x)>Math.abs(lm[3].x-lm[2].x)?1:0;
+  const fingers=[thumbUp,lm[8].y<lm[6].y?1:0,lm[12].y<lm[10].y?1:0,lm[16].y<lm[14].y?1:0,lm[20].y<lm[18].y?1:0];
+  const xs=lm.map(p=>p.x),ys=lm.map(p=>p.y);
+  const conf=Math.min(((Math.max(...xs)-Math.min(...xs))+(Math.max(...ys)-Math.min(...ys)))*2.2,1.0);
+  return{fingers,conf};
+}
+
+function getStable(){
+  if(dqL.length<3)return{stable:'',score:0};
+  const c={};
+  dqL.forEach((l,i)=>{if(l)(c[l]=c[l]||[]).push(dqC[i]);});
+  let best='',bs=0;
+  for(const[l,cs]of Object.entries(c)){
+    if(cs.length<2)continue;
+    const avg=cs.reduce((a,b)=>a+b,0)/cs.length;
+    const sc=avg*(cs.length/dqL.length);
+    if(sc>bs&&avg>0.3){best=l;bs=sc;}
+  }
+  return{stable:best,score:bs};
+}
+
+function renderUI(letter,conf,fingers,now){
+  const el=document.getElementById('detected-letter');
+  el.textContent=letter||'—';
+  const pct=Math.round(conf*100);
+  document.getElementById('conf-bar').style.width=pct+'%';
+  document.getElementById('conf-label').textContent='Confidence — '+pct+'%';
+  const pips=document.getElementById('finger-row').children;
+  fingers.forEach((f,i)=>pips[i].classList.toggle('on',f===1));
+  if(letter){
+    if(letter!==holdLetter){holdLetter=letter;holdStart=now;}
+    const hp=Math.min((now-holdStart)/HOLD_MS,1.0);
+    document.getElementById('hold-bar').style.width=(hp*100)+'%';
+    if(hp>=1.0&&(now-lastAdded)>COOLDOWN){
+      addLetter(letter);lastAdded=now;holdStart=now;
+      el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),200);
+    }
+  }else{holdLetter='';document.getElementById('hold-bar').style.width='0%';}
+}
+
+function resetDet(){
+  holdLetter='';holdStart=0;dqL=[];dqC=[];
+  document.getElementById('hold-bar').style.width='0%';
+  document.getElementById('conf-bar').style.width='0%';
+  document.getElementById('conf-label').textContent='Confidence —';
+  document.getElementById('detected-letter').textContent='—';
+  Array.from(document.getElementById('finger-row').children).forEach(p=>p.classList.remove('on'));
+}
+
+function addLetter(l){letterBuf.push(l);redraw();}
+function redraw(){
+  document.getElementById('word-text').textContent=letterBuf.join('');
+  const all=[...wordBuf,letterBuf.join('')].filter(Boolean);
+  document.getElementById('sentence-display').textContent=all.join(' ')||'Your sentence will appear here...';
+}
+function confirmWord(){const w=letterBuf.join('').trim();if(w)wordBuf.push(w);letterBuf=[];redraw();}
+function addSpace(){confirmWord();}
+function doBack(){if(letterBuf.length)letterBuf.pop();else if(wordBuf.length)wordBuf.pop();redraw();}
+function clearAll(){letterBuf=[];wordBuf=[];redraw();resetDet();}
+
+function showOv(icon,title,msg,steps){
+  const ov=document.getElementById('cam-overlay');
+  ov.innerHTML=`<div class="ov-icon">${icon}</div><div class="ov-title">${title}</div><div class="ov-msg">${msg}</div>${steps.length?`<ul class="ov-steps">${steps.map(s=>`<li>${s}</li>`).join('')}</ul>`:''}`;
+  ov.style.display='flex';
+}
+function hideOv(){document.getElementById('cam-overlay').style.display='none';}
+function setStatus(state,text){
+  const d=document.getElementById('sdot'),t=document.getElementById('stext');
+  d.className='sdot'+(state==='live'?' live':state==='err'?' err':'');
+  t.textContent=text;
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('mode-asl').classList.toggle('on',m==='ASL');
+  document.getElementById('mode-isl').classList.toggle('on',m==='ISL');
+  clearAll();
+}
+function showTab(t){
+  document.getElementById('tab-asl').style.display=t==='asl'?'grid':'none';
+  document.getElementById('tab-isl').style.display=t==='isl'?'grid':'none';
+  document.querySelectorAll('.gtab').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='asl')||(i===1&&t==='isl')));
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key===' '){e.preventDefault();addSpace();}
+  if(e.key==='Enter')confirmWord();
+  if(e.key==='Backspace'){e.preventDefault();doBack();}
+  if(e.key==='c'||e.key==='C')clearAll();
+});
+
+// scroll reveal
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
